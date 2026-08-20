@@ -4,20 +4,13 @@ import { useAuthStore } from "@/store/authStore";
 
 export type Gender = "female" | "male" | "other";
 
-// TODO(BE): 건강목표 enum 값이 명세서에 필드명(healthGoal)만 있고 각 항목의
-// 실제 코드값은 없어서 임시로 정함 — BE 확정되면 이 값들만 교체하면 됨.
-export type HealthGoalCode =
-  | "skinCare"
-  | "sleepImprovement"
-  | "exerciseHabit"
-  | "dietManagement"
-  | "stressManagement"
-  | "hydration";
+// Swagger(ProfileUpdateRequest) 기준 확정값 — 4개 중 하나만 선택 가능한 단일값.
+export type HealthGoalCode = "SKIN_CARE" | "SLEEP" | "WEIGHT_MANAGEMENT" | "HEALTHY_HABIT";
 
 export interface UpdateProfileRequest {
   age: number;
   gender: Gender;
-  healthGoal: HealthGoalCode[];
+  healthGoal: HealthGoalCode;
 }
 
 const MOCK_DELAY_MS = 400;
@@ -44,13 +37,7 @@ export const profileApi = {
     if (USE_MOCK) {
       await mockUpdateProfile(payload);
     } else {
-      // BE는 healthGoal을 배열이 아니라 문자열 하나로 받음 — 여러 개 선택한
-      // 건강목표는 쉼표로 이어붙여서 보낸다(멀티 선택 UI는 그대로 유지).
-      await apiClient.patch<void>("/users/me/profile", {
-        age: payload.age,
-        gender: payload.gender,
-        healthGoal: payload.healthGoal.join(","),
-      });
+      await apiClient.patch<void>("/users/me/profile", payload);
     }
     useAuthStore.getState().markOnboardingCompleted();
   },
